@@ -200,8 +200,8 @@ IONUX.Views.AdvancedSearch = Backbone.View.extend({
       });
 
     var map_options = {
-      center: new google.maps.LatLng(0, 0),
-      zoom: 1,
+      center: new google.maps.LatLng(39.8106460, -98.5569760),
+      zoom: 3,
       mapTypeId: google.maps.MapTypeId.ROADMAP,
       zoomControlOptions: {
         style: google.maps.ZoomControlStyle.SMALL

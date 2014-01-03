@@ -618,8 +618,54 @@ IONUX.Views.Map = Backbone.View.extend({
 
     // register event to get and render map bounds
     var self = this;
+
+    self.rectangle_options =  {
+      fillColor     : '#c4e5fc',
+      fillOpacity   : 0.5,
+      strokeWeight  : 1,
+      strokeColor   : '#0cc1ff',
+      strokeOpacity : 0.8,
+      draggable     : true,
+      editable      : true
+    };
+
+    self.drawingManager = new google.maps.drawing.DrawingManager({
+      drawingControl: false,
+      drawingControlOptions: {
+        position: google.maps.ControlPosition.TOP_CENTER,
+        drawingModes: [
+          google.maps.drawing.OverlayType.RECTANGLE
+        ]
+      },
+      rectangleOptions: self.rectangle_options
+    });
+
+    self.drawingManager.setMap(self.map);
+
+    google.maps.event.addListener(self.drawingManager, 'overlaycomplete', function(e) {
+      // Switch back to non-drawing mode after drawing a shape.
+      self.drawingManager.setDrawingMode(null);
+
+      // Yuck.  Need to keep a reference to the active shape in case we need to delete it later.
+      self.rectangle = e.overlay;
+      // And we have to create a listener on the rectangle to catch modifications / dragging.
+      google.maps.event.addListener(self.rectangle, 'bounds_changed', function() {
+        //self.update_geo_inputs(self.rectangle.getBounds());
+      });
+
+      // update geo inputs to reflect rectangle
+      //self.update_geo_inputs(e.overlay.getBounds());
+    });
+
     google.maps.event.addListener(this.map, "bounds_changed", function(e) {
        self.render_map_bounds(e);
+    });
+    google.maps.event.addListener(self.drawingManager, 'drawingmode_changed', function(e) {
+      // Clear out the rectangle if necessary.
+      if (self.rectangle) {
+        self.rectangle.setMap(null);
+        delete self.rectangle;
+      }
     });
     
     // Ideally we would put this check on bounds_changed, but that fires so frequently.
@@ -644,6 +690,11 @@ IONUX.Views.Map = Backbone.View.extend({
 
     google.maps.event.addListener(this.map, "mousemove", function(e) {
         self.render_map_bounds(e);
+    });
+
+    google.maps.event.addListener(this.map, "rightclick", function(e) {
+        console.log("Right click");
+        self.drawingManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
     });
     
     this.markerClusterer = new MarkerClusterer(this.map, null, {
